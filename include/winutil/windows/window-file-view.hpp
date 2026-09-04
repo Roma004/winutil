@@ -20,7 +20,7 @@ class WindowFileView : public BaseWindow {
         unsigned char_no;
     };
 
-    WINDOW_CONSTRUCTOR(WindowFileView)
+    using BaseWindow::BaseWindow;
 
     size_t last_line_no() const noexcept { return _lines.size(); }
 

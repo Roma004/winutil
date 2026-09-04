@@ -1,4 +1,5 @@
 #include "winutil/windows/windows-row.hpp"
+#include <memory>
 #include <ranges>
 #include <vector>
 
@@ -12,10 +13,32 @@ void WindowsRow::update() {
     for (auto &win : _cols) win->update();
 }
 
-BaseWindow &WindowsRow::get_child(unsigned idx) {
+Window &WindowsRow::get_child(unsigned idx) {
     if (idx >= _cols.size())
         throw std::runtime_error("Invalid window id passed!");
     return *_cols[idx];
+}
+
+engine::DrawArea WindowsRow::alloc_area() {
+    if (_cols.size() == 0) {
+        return area.copy();
+    } else {
+        unsigned full_height = area.get_info().height;
+        unsigned full_width = area.get_info().width;
+        unsigned win_width = full_width / (_cols.size() + 1);
+        if (win_width < WINDOW_MIN_SIZE)
+            throw std::runtime_error("Space for windows ran out!");
+        unsigned pos = place_windows(win_width - 1);
+        auto win_area = area.subarea({0, pos}, full_width - pos, full_height);
+        win_area.clear();
+        return win_area;
+    }
+}
+
+Window &WindowsRow::add_window(std::unique_ptr<Window> &&win) {
+    auto &res = *win;
+    _cols.push_back(std::move(win));
+    return res;
 }
 
 void WindowsRow::move(engine::DrawArea &&new_area) {

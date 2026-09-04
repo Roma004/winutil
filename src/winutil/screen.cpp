@@ -1,15 +1,18 @@
-#include "winutil/window.hpp"
 #include "winutil/screen.hpp"
-#include "winutil/engine/color-string.hpp"
-#include "winutil/engine/draw-area.hpp"
-#include "winutil/engine/strdiff.hpp"
+
 #include <asm-generic/ioctls.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
+
 #include <cstdlib>
 #include <iostream>
 #include <ostream>
 #include <ranges>
-#include <sys/ioctl.h>
-#include <unistd.h>
+
+#include "winutil/engine/color-string.hpp"
+#include "winutil/engine/draw-area.hpp"
+#include "winutil/engine/strdiff.hpp"
+#include "winutil/window.hpp"
 
 #define CURSOR_AT_START          L"\e[1;1f"
 #define CURSOR_SAVE              L"\e[s"
@@ -33,6 +36,17 @@ Screen::~Screen() {
         out.flush();
         alternative_screen_enabled = false;
     }
+}
+
+engine::DrawArea Screen::alloc_area() { return main_area.make_area(); }
+
+Window &Screen::add_window(std::unique_ptr<Window> &&win) {
+    if (_main != nullptr)
+        throw std::runtime_error(
+            "Only one window could be cateated add into the Screen"
+        );
+    _main = std::move(win);
+    return *_main;
 }
 
 void Screen::destroy_handler(int signal) noexcept {
@@ -99,9 +113,7 @@ void Screen::update() {
     repl_area = main_area.copy();
 }
 
-Window &Screen::get_window() {
-    return *_main;
-}
+Window &Screen::get_window() { return *_main; }
 
 void Screen::resize(unsigned width, unsigned height) {
     main_area.resize(width, height);

@@ -13,10 +13,32 @@ void WindowsColumn::clear() {
     for (auto &row : _rows) row->clear();
 }
 
-BaseWindow &WindowsColumn::get_child(unsigned idx) {
+Window &WindowsColumn::get_child(unsigned idx) {
     if (idx >= _rows.size())
         throw std::runtime_error("Invalid window id passed!");
     return *_rows[idx];
+}
+
+engine::DrawArea WindowsColumn::alloc_area() {
+    if (_rows.size() == 0) {
+        return area.copy();
+    } else {
+        unsigned full_height = area.get_info().height;
+        unsigned full_width = area.get_info().width;
+        unsigned win_height = full_height / (_rows.size() + 1);
+        if (win_height < WINDOW_MIN_SIZE)
+            throw std::runtime_error("Space for windows ran out!");
+        unsigned pos = place_windows(win_height - 1);
+        auto win_area = area.subarea({pos, 0}, full_width, full_height - pos);
+        win_area.clear();
+        return win_area;
+    }
+}
+
+Window &WindowsColumn::add_window(std::unique_ptr<Window> &&win) {
+    auto &res = *win;
+    _rows.push_back(std::move(win));
+    return res;
 }
 
 void WindowsColumn::move(engine::DrawArea &&new_area) {

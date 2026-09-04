@@ -20,6 +20,19 @@ class Window {
     /// Every windows is allowed to change content of it's DrawArea
     /// either in this method or everywhere else outside it.
     virtual void update() = 0;
+
+    /// @brief get window size imformation
+    virtual engine::WindowDesc get_size() const noexcept = 0;
+
+    /// @brief get draw area of this window
+    virtual const engine::DrawArea &get_area() const noexcept = 0;
+};
+
+/// @brief concept of any Window, constructible from DrawArea
+template <class _Win>
+concept WindowType = requires {
+    requires std::derived_from<_Win, Window>
+                 && std::constructible_from<_Win, engine::DrawArea &&>;
 };
 
 } // namespace Winutil

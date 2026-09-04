@@ -7,7 +7,7 @@ namespace Winutil {
 /// @brief Window wich implements base serial output protocol.
 class WindowOutput : public BaseWindow {
   public:
-    WINDOW_CONSTRUCTOR(WindowOutput)
+    using BaseWindow::BaseWindow;
 
     /// @brief put string at the write position
     void write(std::wstring_view);

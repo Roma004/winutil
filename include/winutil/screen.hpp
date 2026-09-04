@@ -2,6 +2,8 @@
 #include <memory>
 #include <winutil/window.hpp>
 
+#include "winutil/engine/draw-area.hpp"
+
 namespace Winutil {
 
 /// @brief Main screen class. The top of windows hierarchy
@@ -36,6 +38,10 @@ class Screen {
 
     void resize(unsigned width, unsigned height);
 
+  protected:
+    engine::DrawArea alloc_area();
+    Window &add_window(std::unique_ptr<Window> &&win);
+
   private:
     std::unique_ptr<Window> _main;
     engine::MainDrawArea main_area;
@@ -45,10 +51,9 @@ class Screen {
 template <typename _Win>
     requires(std::derived_from<_Win, Window>)
 _Win &Screen::make_window() {
-    if (_main != nullptr)
-        throw std::runtime_error("Only one window could be cateated into main");
-    _main = std::make_unique<_Win>(std::move(main_area.make_area()));
-    return dynamic_cast<_Win &>(*_main);
+    return dynamic_cast<_Win &>(
+        add_window(std::make_unique<_Win>(alloc_area()))
+    );
 }
 
 }; // namespace Winutil

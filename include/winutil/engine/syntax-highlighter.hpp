@@ -39,7 +39,7 @@ class SyntaxHighlighter {
             std::ranges::input_range<R>
             && std::is_same_v<std::ranges::range_value_t<R>, pattern_config>
         )
-    explicit SyntaxHighlighter(R &&configs, std::wstring default_color) {
+    SyntaxHighlighter(R &&configs, std::wstring_view default_color) {
         std::wstring regex_string = L"";
 
         _default_color =

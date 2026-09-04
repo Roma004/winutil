@@ -6,13 +6,13 @@ namespace Winutil {
 
 class WindowsColumn : public BaseWindow {
   public:
-    WINDOW_CONSTRUCTOR(WindowsColumn)
+    using BaseWindow::BaseWindow;
 
     void clear() override;
     void move(engine::DrawArea &&new_area) override;
     void update() override;
 
-    BaseWindow &get_child(unsigned);
+    Window &get_child(unsigned);
 
     void resize_windows(std::ranges::input_range auto &&sizes);
 
@@ -21,9 +21,11 @@ class WindowsColumn : public BaseWindow {
     void resize_windows(Iter begin, Iter end);
 
     /// @brief create child window of type _Win
-    template <typename _Win>
-        requires(std::derived_from<_Win, BaseWindow>)
-    _Win &make_window();
+    template <WindowType _Win> _Win &make_window();
+
+  protected:
+    engine::DrawArea alloc_area();
+    Window &add_window(std::unique_ptr<Window> &&win);
 
   private:
     void clear_rulers();
@@ -31,7 +33,7 @@ class WindowsColumn : public BaseWindow {
     unsigned place_windows(const std::vector<unsigned> &sizes);
     unsigned place_window(unsigned win_id, unsigned pos, unsigned size);
 
-    std::vector<std::unique_ptr<BaseWindow>> _rows;
+    std::vector<std::unique_ptr<Window>> _rows;
 };
 
 void WindowsColumn::resize_windows(std::ranges::input_range auto &&sizes) {
@@ -58,26 +60,10 @@ void WindowsColumn::resize_windows(Iter begin, Iter end) {
     place_windows(sizes);
 }
 
-template <typename _Win>
-    requires(std::derived_from<_Win, BaseWindow>)
-_Win &WindowsColumn::make_window() {
-    std::unique_ptr<_Win> res_ptr;
-    if (_rows.size() == 0) {
-        res_ptr = std::make_unique<_Win>(area.copy());
-    } else {
-        unsigned full_height = area.get_info().height;
-        unsigned full_width = area.get_info().width;
-        unsigned win_height = full_height / (_rows.size() + 1);
-        if (win_height < WINDOW_MIN_SIZE)
-            throw std::runtime_error("Space for windows ran out!");
-        unsigned pos = place_windows(win_height - 1);
-        auto win_area = area.subarea({pos, 0}, full_width, full_height - pos);
-        win_area.clear();
-        res_ptr = std::make_unique<_Win>(std::move(win_area));
-    }
-    auto &res = *res_ptr;
-    _rows.push_back(std::move(res_ptr));
-    return res;
+template <WindowType _Win> _Win &WindowsColumn::make_window() {
+    std::unique_ptr<_Win> res_ptr =
+        std::make_unique<_Win>(std::move(alloc_area()));
+    return dynamic_cast<_Win>(add_window(std::move(res_ptr)));
 }
 
 } // namespace Winutil

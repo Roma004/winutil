@@ -30,10 +30,12 @@ class BaseWindow : public Window {
     void update() override;
 
     /// @brief get window size imformation
-    engine::WindowDesc get_size() const noexcept { return area.get_info(); };
+    engine::WindowDesc get_size() const noexcept override {
+        return area.get_info();
+    };
 
     /// @brief get draw area of this window
-    const engine::DrawArea &get_area() const noexcept { return area; };
+    const engine::DrawArea &get_area() const noexcept override { return area; };
 
   protected:
     engine::DrawArea area;
